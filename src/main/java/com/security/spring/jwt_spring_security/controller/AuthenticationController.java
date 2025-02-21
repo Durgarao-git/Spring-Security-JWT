@@ -3,6 +3,7 @@ package com.security.spring.jwt_spring_security.controller;
 import com.security.spring.jwt_spring_security.dto.AuthenticationRequest;
 import com.security.spring.jwt_spring_security.dto.AuthenticationResponse;
 import com.security.spring.jwt_spring_security.service.jwt.UserDetailsServiceImpl;
+import com.security.spring.jwt_spring_security.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +27,10 @@ public class AuthenticationController {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/authentication")
     public AuthenticationResponse createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletResponse response) throws BadCredentialsException, UsernameNotFoundException, IOException, DisabledException {
         try{
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(),authenticationRequest.getPassword()))
@@ -36,7 +42,13 @@ public class AuthenticationController {
             return null;
         }
 
-        final UserDetails userDetails= userDetailsService.loadUserByUsername(authenticationRequest.getEmail())
+        final UserDetails userDetails= userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
+
+        final String jwt=jwtUtil.generateToken(userDetails.getUsername());
+
+        return new AuthenticationResponse(jwt);
     }
 
 }
+
+
